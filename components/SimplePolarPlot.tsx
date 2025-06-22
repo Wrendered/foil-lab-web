@@ -63,11 +63,6 @@ export function SimplePolarPlot({ segments, className = '' }: SimplePolarPlotPro
     const centerY = 150;
     const maxRadius = 120;
     
-    // Safety check for empty data
-    if (polarData.length === 0) {
-      return null;
-    }
-    
     // Calculate speed range for better scaling
     const speeds = polarData.map(d => d!.speed);
     const maxSpeed = Math.max(...speeds);
@@ -89,8 +84,8 @@ export function SimplePolarPlot({ segments, className = '' }: SimplePolarPlotPro
       scaleMax = maxSpeed * 1.05; // Add 5% headroom
     }
     
-    const scaleRange = scaleMax - scaleMin || 1; // Prevent division by zero
-    const maxDistance = Math.max(...polarData.map(d => d!.totalDistance)) || 1;
+    const scaleRange = scaleMax - scaleMin;
+    const maxDistance = Math.max(...polarData.map(d => d!.totalDistance));
     
     return (
       <svg viewBox="0 0 300 300" className="w-full h-64">
