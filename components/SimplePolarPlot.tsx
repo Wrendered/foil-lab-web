@@ -62,29 +62,7 @@ export function SimplePolarPlot({ segments, className = '' }: SimplePolarPlotPro
     const centerX = 150;
     const centerY = 150;
     const maxRadius = 120;
-    
-    // Calculate speed range for better scaling
-    const speeds = polarData.map(d => d!.speed);
-    const maxSpeed = Math.max(...speeds);
-    const minSpeed = Math.min(...speeds);
-    
-    // Set minimum scale to show meaningful differences
-    // If all speeds are within 3 knots, use a tighter scale
-    const speedRange = maxSpeed - minSpeed;
-    let scaleMin = minSpeed;
-    let scaleMax = maxSpeed;
-    
-    if (speedRange < 3) {
-      // For small ranges, pad by 1 knot on each side
-      scaleMin = Math.max(0, minSpeed - 1);
-      scaleMax = maxSpeed + 1;
-    } else {
-      // For larger ranges, use 80% of min speed as floor
-      scaleMin = Math.max(0, minSpeed * 0.8);
-      scaleMax = maxSpeed * 1.05; // Add 5% headroom
-    }
-    
-    const scaleRange = scaleMax - scaleMin;
+    const maxSpeed = Math.max(...polarData.map(d => d!.speed));
     const maxDistance = Math.max(...polarData.map(d => d!.totalDistance));
     
     return (
@@ -101,19 +79,6 @@ export function SimplePolarPlot({ segments, className = '' }: SimplePolarPlotPro
             strokeWidth="1"
           />
         ))}
-        
-        {/* Inner boundary circle if we have a non-zero minimum */}
-        {scaleMin > 0 && (
-          <circle
-            cx={centerX}
-            cy={centerY}
-            r={2}
-            fill="none"
-            stroke="#9CA3AF"
-            strokeWidth="1"
-            strokeDasharray="2,2"
-          />
-        )}
         
         {/* Angle lines for both sides */}
         {[0, 30, 45, 60, 90].map(angle => {
@@ -175,30 +140,25 @@ export function SimplePolarPlot({ segments, className = '' }: SimplePolarPlotPro
         })}
         
         {/* Speed labels */}
-        {[0.25, 0.5, 0.75, 1].map((fraction, i) => {
-          const speed = scaleMin + (scaleRange * fraction);
-          return (
-            <text
-              key={i}
-              x={centerX + 5}
-              y={centerY - maxRadius * fraction}
-              fontSize="10"
-              fill="#374151"
-              fontWeight="500"
-            >
-              {speed.toFixed(1)}kn
-            </text>
-          );
-        })}
+        {[maxSpeed * 0.25, maxSpeed * 0.5, maxSpeed * 0.75, maxSpeed].map((speed, i) => (
+          <text
+            key={i}
+            x={centerX + 5}
+            y={centerY - maxRadius * (i + 1) * 0.25}
+            fontSize="10"
+            fill="#374151"
+            fontWeight="500"
+          >
+            {speed.toFixed(1)}kn
+          </text>
+        ))}
         
         {/* Data points */}
         {polarData.map((data, index) => {
           if (!data) return null;
           
           const radian = (data.angle * Math.PI) / 180;
-          // Scale radius based on the new min/max range
-          const normalizedSpeed = (data.speed - scaleMin) / scaleRange;
-          const radius = Math.max(0, Math.min(maxRadius, normalizedSpeed * maxRadius));
+          const radius = (data.speed / maxSpeed) * maxRadius;
           
           // Port side (left)
           const portX = centerX - Math.cos(radian - Math.PI/2) * radius;
@@ -288,11 +248,6 @@ export function SimplePolarPlot({ segments, className = '' }: SimplePolarPlotPro
             
             <div className="mt-2 text-xs text-gray-600 text-center">
               Circle size indicates total distance. Distance from center shows speed.
-              {scaleMin > 0 && (
-                <div className="mt-1">
-                  Speed scale: {scaleMin.toFixed(1)} - {scaleMax.toFixed(1)} knots
-                </div>
-              )}
             </div>
           </div>
         )}
