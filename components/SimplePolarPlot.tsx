@@ -57,35 +57,43 @@ export function SimplePolarPlot({ segments, className = '' }: SimplePolarPlotPro
     }).filter(Boolean);
   }, [segments]);
 
+  // Calculate scale values outside of createPolarPlot so they're accessible everywhere
+  const scaleInfo = useMemo(() => {
+    if (polarData.length === 0) {
+      return { scaleMin: 0, scaleMax: 20, scaleRange: 20 };
+    }
+    
+    const speeds = polarData.map(d => d!.speed);
+    const maxSpeed = Math.max(...speeds);
+    const minSpeed = Math.min(...speeds);
+    const speedRange = maxSpeed - minSpeed;
+    
+    let scaleMin = minSpeed;
+    let scaleMax = maxSpeed;
+    
+    if (speedRange < 3) {
+      // For small ranges, pad by 2 knots below and minimal above
+      scaleMin = Math.max(0, minSpeed - 2);
+      scaleMax = maxSpeed + 0.1;
+    } else {
+      // For larger ranges, use 70% of min speed as floor and no headroom
+      scaleMin = Math.max(0, minSpeed * 0.7);
+      scaleMax = maxSpeed;
+    }
+    
+    const scaleRange = scaleMax - scaleMin || 1;
+    
+    return { scaleMin, scaleMax, scaleRange };
+  }, [polarData]);
+
   // Create polar plot SVG
   const createPolarPlot = () => {
     const centerX = 150;
     const centerY = 150;
     const maxRadius = 120;
     
-    // Calculate speed range for better scaling
-    const speeds = polarData.map(d => d!.speed);
-    const maxSpeed = Math.max(...speeds);
-    const minSpeed = Math.min(...speeds);
-    
-    // Set minimum scale to show meaningful differences
-    // If all speeds are within 3 knots, use a tighter scale
-    const speedRange = maxSpeed - minSpeed;
-    let scaleMin = minSpeed;
-    let scaleMax = maxSpeed;
-    
-    if (speedRange < 3) {
-      // For small ranges, pad by 1 knot on each side
-      scaleMin = Math.max(0, minSpeed - 1);
-      scaleMax = maxSpeed + 1;
-    } else {
-      // For larger ranges, use 80% of min speed as floor
-      scaleMin = Math.max(0, minSpeed * 0.8);
-      scaleMax = maxSpeed * 1.05; // Add 5% headroom
-    }
-    
-    const scaleRange = scaleMax - scaleMin;
-    const maxDistance = Math.max(...polarData.map(d => d!.totalDistance));
+    const { scaleMin, scaleMax, scaleRange } = scaleInfo;
+    const maxDistance = Math.max(...polarData.map(d => d!.totalDistance)) || 1;
     
     return (
       <svg viewBox="0 0 300 300" className="w-full h-64">
@@ -288,9 +296,9 @@ export function SimplePolarPlot({ segments, className = '' }: SimplePolarPlotPro
             
             <div className="mt-2 text-xs text-gray-600 text-center">
               Circle size indicates total distance. Distance from center shows speed.
-              {scaleMin > 0 && (
+              {scaleInfo.scaleMin > 0 && (
                 <div className="mt-1">
-                  Speed scale: {scaleMin.toFixed(1)} - {scaleMax.toFixed(1)} knots
+                  Speed scale: {scaleInfo.scaleMin.toFixed(1)} - {scaleInfo.scaleMax.toFixed(1)} knots
                 </div>
               )}
             </div>
