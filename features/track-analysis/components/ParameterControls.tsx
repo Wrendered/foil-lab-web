@@ -1,0 +1,266 @@
+'use client';
+
+import { useEffect } from 'react';
+import { useForm, Controller } from 'react-hook-form';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { RotateCcw, Play, Settings2 } from 'lucide-react';
+import { useAnalysisStore } from '@/stores/analysisStore';
+import { useConfig } from '@/hooks/useApi';
+import { AnalysisParameters } from '@/stores/analysisStore';
+
+interface ParameterControlsProps {
+  onParametersChange?: (params: AnalysisParameters) => void;
+  onReanalyze?: () => void;
+  disabled?: boolean;
+  className?: string;
+}
+
+export function ParameterControls({
+  onParametersChange,
+  onReanalyze,
+  disabled = false,
+  className = '',
+}: ParameterControlsProps) {
+  const analysisStore = useAnalysisStore();
+  const { data: config } = useConfig();
+
+  const { control, watch, reset } = useForm<AnalysisParameters>({
+    defaultValues: {
+      ...analysisStore.parameters,
+    },
+  });
+
+  const watchedValues = watch();
+
+  // Update form when config loads (only once)
+  useEffect(() => {
+    if (config) {
+      reset({
+        windDirection: config.defaults.wind_direction || 90,
+        angleTolerance: config.defaults.angle_tolerance || 25,
+        minSpeed: config.defaults.min_speed || 8.0,
+        minDistance: config.defaults.min_distance || 100,
+        minDuration: config.defaults.min_duration || 10,
+      });
+    }
+  }, [config, reset]);
+
+  // Real-time parameter updates (debounced) - always enabled for now
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const newParams: AnalysisParameters = {
+        windDirection: watchedValues.windDirection,
+        angleTolerance: watchedValues.angleTolerance,
+        minSpeed: watchedValues.minSpeed,
+        minDistance: watchedValues.minDistance,
+        minDuration: watchedValues.minDuration,
+      };
+
+      analysisStore.updateParameters(newParams);
+      onParametersChange?.(newParams);
+    }, 500); // 500ms debounce
+
+    return () => clearTimeout(timer);
+  }, [
+    watchedValues.windDirection,
+    watchedValues.angleTolerance,
+    watchedValues.minSpeed,
+    watchedValues.minDistance,
+    watchedValues.minDuration,
+    onParametersChange,
+  ]);
+
+  const handleResetToDefaults = () => {
+    if (config) {
+      const defaultParams = {
+        windDirection: config.defaults.wind_direction || 90,
+        angleTolerance: config.defaults.angle_tolerance || 25,
+        minSpeed: config.defaults.min_speed || 8.0,
+        minDistance: config.defaults.min_distance || 100,
+        minDuration: config.defaults.min_duration || 10,
+      };
+      reset(defaultParams);
+    }
+  };
+
+  const handleManualReanalyze = () => {
+    const currentParams: AnalysisParameters = {
+      windDirection: watchedValues.windDirection,
+      angleTolerance: watchedValues.angleTolerance,
+      minSpeed: watchedValues.minSpeed,
+      minDistance: watchedValues.minDistance,
+      minDuration: watchedValues.minDuration,
+    };
+    
+    analysisStore.updateParameters(currentParams);
+    onReanalyze?.();
+  };
+
+  const getRanges = (config: any) => ({
+    windDirection: config?.ranges?.wind_direction || { min: 0, max: 360, step: 1 },
+    angleTolerance: config?.ranges?.angle_tolerance || { min: 5, max: 45, step: 1 },
+    minSpeed: config?.ranges?.min_speed || { min: 1, max: 20, step: 0.1 },
+    minDistance: config?.ranges?.min_distance || { min: 50, max: 500, step: 10 },
+    minDuration: config?.ranges?.min_duration || { min: 5, max: 60, step: 1 },
+  });
+
+  const ranges = getRanges(config);
+
+  return (
+    <Card className={className}>
+      <CardHeader className="pb-3">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <Settings2 className="h-5 w-5" />
+            <CardTitle>Analysis Parameters</CardTitle>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleResetToDefaults}
+              disabled={disabled}
+              className="text-xs"
+            >
+              <RotateCcw className="h-3.5 w-3.5 mr-1" />
+              Reset
+            </Button>
+            <Button
+              size="sm"
+              onClick={handleManualReanalyze}
+              disabled={disabled}
+              className="text-xs"
+            >
+              <Play className="h-3.5 w-3.5 mr-1" />
+              Re-analyze
+            </Button>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        {/* Real-time Updates - Always enabled for now */}
+        <div className="text-center py-2">
+          <p className="text-sm text-muted-foreground">
+            Real-time parameter updates enabled
+          </p>
+        </div>
+
+
+        {/* Angle Tolerance */}
+        <div className="space-y-2">
+          <Label htmlFor="angleTolerance">Angle Tolerance</Label>
+          <div className="flex items-center gap-2">
+            <Controller
+              control={control}
+              name="angleTolerance"
+              render={({ field }) => (
+                <Input
+                  id="angleTolerance"
+                  type="number"
+                  min={ranges.angleTolerance.min}
+                  max={ranges.angleTolerance.max}
+                  step={ranges.angleTolerance.step}
+                  value={field.value}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => field.onChange(parseFloat(e.target.value))}
+                  disabled={disabled}
+                  className="flex-1"
+                />
+              )}
+            />
+            <span className="text-sm text-muted-foreground">°</span>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Allowable deviation from true upwind/downwind
+          </p>
+        </div>
+
+        {/* Min Speed */}
+        <div className="space-y-2">
+          <Label htmlFor="minSpeed">Minimum Speed</Label>
+          <div className="flex items-center gap-2">
+            <Controller
+              control={control}
+              name="minSpeed"
+              render={({ field }) => (
+                <Input
+                  id="minSpeed"
+                  type="number"
+                  min={ranges.minSpeed.min}
+                  max={ranges.minSpeed.max}
+                  step={ranges.minSpeed.step}
+                  value={field.value}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => field.onChange(parseFloat(e.target.value))}
+                  disabled={disabled}
+                  className="flex-1"
+                />
+              )}
+            />
+            <span className="text-sm text-muted-foreground">kts</span>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Minimum speed to consider for analysis
+          </p>
+        </div>
+
+        {/* Min Distance */}
+        <div className="space-y-2">
+          <Label htmlFor="minDistance">Minimum Distance</Label>
+          <div className="flex items-center gap-2">
+            <Controller
+              control={control}
+              name="minDistance"
+              render={({ field }) => (
+                <Input
+                  id="minDistance"
+                  type="number"
+                  min={ranges.minDistance.min}
+                  max={ranges.minDistance.max}
+                  step={ranges.minDistance.step}
+                  value={field.value}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => field.onChange(parseFloat(e.target.value))}
+                  disabled={disabled}
+                  className="flex-1"
+                />
+              )}
+            />
+            <span className="text-sm text-muted-foreground">m</span>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Minimum segment distance to include
+          </p>
+        </div>
+
+        {/* Min Duration */}
+        <div className="space-y-2">
+          <Label htmlFor="minDuration">Minimum Duration</Label>
+          <div className="flex items-center gap-2">
+            <Controller
+              control={control}
+              name="minDuration"
+              render={({ field }) => (
+                <Input
+                  id="minDuration"
+                  type="number"
+                  min={ranges.minDuration.min}
+                  max={ranges.minDuration.max}
+                  step={ranges.minDuration.step}
+                  value={field.value}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => field.onChange(parseFloat(e.target.value))}
+                  disabled={disabled}
+                  className="flex-1"
+                />
+              )}
+            />
+            <span className="text-sm text-muted-foreground">s</span>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Minimum segment duration to include
+          </p>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}

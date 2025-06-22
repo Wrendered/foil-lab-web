@@ -1,0 +1,116 @@
+
+> foil-lab-web@0.1.0 dev
+> next dev
+
+   ▲ Next.js 15.3.3
+   - Local:        http://localhost:3000
+   - Network:      http://192.168.0.120:3000
+   - Environments: .env.local
+
+ ✓ Starting...
+ ✓ Ready in 1386ms
+ ○ Compiling /analyze-v2 ...
+ ✓ Compiled /analyze-v2 in 1496ms (1132 modules)
+ GET /analyze-v2 200 in 1997ms
+ ✓ Compiled in 226ms (512 modules)
+ GET /analyze-v2 200 in 92ms
+ ✓ Compiled in 396ms (1128 modules)
+ ⨯ ReferenceError: Switch is not defined
+    at Object.render (features/track-analysis/components/ParameterControls.tsx:169:15)
+  167 |             name="realTimeUpdates"
+  168 |             render={({ field }) => (
+> 169 |               <Switch
+      |               ^
+  170 |                 id="realTimeUpdates"
+  171 |                 checked={field.value}
+  172 |                 onCheckedChange={field.onChange} {
+  digest: '2044161425'
+}
+ GET /analyze-v2 500 in 201ms
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ✓ Compiled in 191ms (1128 modules)
+ ⨯ ReferenceError: Switch is not defined
+    at Object.render (features/track-analysis/components/ParameterControls.tsx:169:15)
+  167 |             name="realTimeUpdates"
+  168 |             render={({ field }) => (
+> 169 |               <Switch
+      |               ^
+  170 |                 id="realTimeUpdates"
+  171 |                 checked={field.value}
+  172 |                 onCheckedChange={field.onChange} {
+  digest: '2044161425'
+}
+ ⨯ ReferenceError: Switch is not defined
+    at Object.render (features/track-analysis/components/ParameterControls.tsx:169:15)
+  167 |             name="realTimeUpdates"
+  168 |             render={({ field }) => (
+> 169 |               <Switch
+      |               ^
+  170 |                 id="realTimeUpdates"
+  171 |                 checked={field.value}
+  172 |                 onCheckedChange={field.onChange} {
+  digest: '2044161425'
+}
+ GET /analyze-v2 500 in 228ms
+ ✓ Compiled in 178ms (1128 modules)
+ ⨯ ReferenceError: Switch is not defined
+    at Object.render (features/track-analysis/components/ParameterControls.tsx:168:15)
+  166 |             name="realTimeUpdates"
+  167 |             render={({ field }) => (
+> 168 |               <Switch
+      |               ^
+  169 |                 id="realTimeUpdates"
+  170 |                 checked={field.value}
+  171 |                 onCheckedChange={field.onChange} {
+  digest: '2044161425'
+}
+ GET /analyze-v2 500 in 155ms
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ✓ Compiled in 164ms (1128 modules)
+ ⨯ ReferenceError: Switch is not defined
+    at Object.render (features/track-analysis/components/ParameterControls.tsx:167:15)
+  165 |             name="realTimeUpdates"
+  166 |             render={({ field }) => (
+> 167 |               <Switch
+      |               ^
+  168 |                 id="realTimeUpdates"
+  169 |                 checked={field.value}
+  170 |                 onCheckedChange={field.onChange} {
+  digest: '2044161425'
+}
+ GET /analyze-v2 500 in 157ms
+ ✓ Compiled in 211ms (1128 modules)
+ ⨯ ReferenceError: Switch is not defined
+    at Object.render (features/track-analysis/components/ParameterControls.tsx:164:15)
+  162 |             name="realTimeUpdates"
+  163 |             render={({ field }) => (
+> 164 |               <Switch
+      |               ^
+  165 |                 id="realTimeUpdates"
+  166 |                 checked={field.value}
+  167 |                 onCheckedChange={field.onChange} {
+  digest: '2044161425'
+}
+ GET /analyze-v2 500 in 151ms
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ✓ Compiled in 158ms (1128 modules)
+ ⨯ ReferenceError: Switch is not defined
+    at Object.render (features/track-analysis/components/ParameterControls.tsx:163:15)
+  161 |             name="realTimeUpdates"
+  162 |             render={({ field }) => (
+> 163 |               <Switch
+      |               ^
+  164 |                 id="realTimeUpdates"
+  165 |                 checked={field.value}
+  166 |                 onCheckedChange={field.onChange} {
+  digest: '2044161425'
+}
+ GET /analyze-v2 500 in 165ms
+ ✓ Compiled in 205ms (1128 modules)
+ GET /analyze-v2 200 in 156ms
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ✓ Compiled in 674ms (1128 modules)
+ GET /analyze-v2 200 in 245ms
+ GET /analyze-v2 200 in 125ms
+[?25h
