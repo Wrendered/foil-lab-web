@@ -112,32 +112,30 @@ export function ParameterControls({
   return (
     <Card className={className}>
       <CardHeader className="pb-3">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <Settings2 className="h-5 w-5" />
-            <CardTitle>Analysis Parameters</CardTitle>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleResetToDefaults}
-              disabled={disabled}
-              className="text-xs"
-            >
-              <RotateCcw className="h-3.5 w-3.5 mr-1" />
-              Reset
-            </Button>
-            <Button
-              size="sm"
-              onClick={handleManualReanalyze}
-              disabled={disabled}
-              className="text-xs"
-            >
-              <Play className="h-3.5 w-3.5 mr-1" />
-              Re-analyze
-            </Button>
-          </div>
+        <div className="flex items-center gap-2 mb-3">
+          <Settings2 className="h-5 w-5" />
+          <CardTitle>Analysis Parameters</CardTitle>
+        </div>
+        <div className="flex flex-col sm:flex-row gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleResetToDefaults}
+            disabled={disabled}
+            className="text-xs flex-1 sm:flex-initial"
+          >
+            <RotateCcw className="h-3.5 w-3.5 mr-1" />
+            Reset to Defaults
+          </Button>
+          <Button
+            size="sm"
+            onClick={handleManualReanalyze}
+            disabled={disabled}
+            className="text-xs flex-1 sm:flex-initial"
+          >
+            <Play className="h-3.5 w-3.5 mr-1" />
+            Re-analyze Now
+          </Button>
         </div>
       </CardHeader>
       <CardContent className="space-y-6">

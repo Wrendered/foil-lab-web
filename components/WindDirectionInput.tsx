@@ -53,8 +53,11 @@ export function WindDirectionInput({ className = '' }: WindDirectionInputProps) 
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-blue-900">
           <Wind className="h-5 w-5" />
-          Wind Direction (Required for Analysis)
+          Wind Direction Estimate
         </CardTitle>
+        <p className="text-sm text-blue-700 mt-1">
+          Your initial estimate - will be refined by the algorithm
+        </p>
       </CardHeader>
       <CardContent>
         <div className="space-y-3">
@@ -85,8 +88,10 @@ export function WindDirectionInput({ className = '' }: WindDirectionInputProps) 
             (0° = North, 90° = East, 180° = South, 270° = West)
           </p>
           <div className="bg-blue-100 p-3 rounded-lg">
-            <p className="text-xs text-blue-800 text-center">
-              ⚠️ Set this BEFORE uploading files - it affects analysis results
+            <p className="text-xs text-blue-800 text-center leading-relaxed">
+              💡 <strong>Don't worry about being precise!</strong><br/>
+              The algorithm uses this as a starting point and refines it based on your sailing patterns.<br/>
+              You can also adjust it later if needed.
             </p>
           </div>
         </div>

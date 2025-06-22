@@ -357,39 +357,66 @@ export default function AnalyzePage() {
                   )}
                 </>
               )}
+              
+              {/* Feedback CTA */}
+              {(currentResult || isCompareMode) && (
+                <Card className="mt-8 border-blue-200 bg-blue-50">
+                  <CardContent className="p-6 text-center">
+                    <h3 className="text-lg font-semibold text-blue-900 mb-2">
+                      How's your experience so far?
+                    </h3>
+                    <p className="text-blue-700 mb-4">
+                      Found a bug? Have an idea? This tool is constantly evolving based on user feedback.
+                    </p>
+                    <a 
+                      href="https://www.instagram.com/heart_wrench/" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors"
+                    >
+                      <span>💬</span>
+                      Send Feedback on Instagram
+                    </a>
+                  </CardContent>
+                </Card>
+              )}
             </ClientOnly>
           </div>
         </div>
 
-        <ClientOnly>
-          {/* Debug Info */}
-          {process.env.NODE_ENV === 'development' && (
-            <Card className="mt-12">
-              <CardHeader>
-                <CardTitle className="text-sm">Debug Information</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-xs font-mono space-y-1">
-                  <p>Files in queue: {uploadStore.files.length}</p>
-                  <p>
-                    Files by status:{' '}
-                    {['pending', 'uploading', 'processing', 'completed', 'error'].map(
-                      (status) => {
-                        const count = uploadStore.files.filter(
-                          (f) => f.status === status
-                        ).length;
-                        return count > 0 ? `${status}=${count} ` : '';
-                      }
-                    )}
-                  </p>
-                  <p>Wind direction: {analysisStore.parameters.windDirection}°</p>
-                  <p>VMG Highlight: {analysisStore.vmgHighlightEnabled ? 'ON' : 'OFF'}</p>
-                  <p>API URL: {process.env.NEXT_PUBLIC_API_URL}</p>
+        {/* Feedback and Bug Report Section */}
+        <Card className="mt-12 border-amber-200 bg-amber-50">
+          <CardContent className="p-6">
+            <div className="flex items-start gap-4">
+              <div className="flex-shrink-0">
+                <span className="text-2xl">🐛</span>
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-amber-900 mb-2">
+                  Found a Bug or Have Feedback?
+                </h3>
+                <p className="text-amber-800 mb-4 leading-relaxed">
+                  This is a prototype built in spare time - you'll probably find bugs, quirks, or things that don't work as expected. 
+                  That's totally normal! Your feedback helps make this tool better for everyone.
+                </p>
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <a 
+                    href="https://www.instagram.com/heart_wrench/" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 bg-amber-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-amber-700 transition-colors"
+                  >
+                    <span>📱</span>
+                    Report Bug on Instagram
+                  </a>
+                  <span className="text-amber-700 text-sm flex items-center">
+                    Screenshots and details are super helpful!
+                  </span>
                 </div>
-              </CardContent>
-            </Card>
-          )}
-        </ClientOnly>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </ErrorBoundary>
   );
