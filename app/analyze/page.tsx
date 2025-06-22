@@ -227,14 +227,6 @@ export default function AnalyzePage() {
             </Card>
           )}
 
-          {config && !configError && (
-            <Card className="mb-4 p-4 border-green-200 bg-green-50">
-              <div className="flex items-center gap-2">
-                <CheckCircle className="h-4 w-4 text-green-600" />
-                <span className="text-green-800">Configuration loaded</span>
-              </div>
-            </Card>
-          )}
         </div>
 
         {/* Main Content Grid */}
@@ -358,28 +350,6 @@ export default function AnalyzePage() {
                 </>
               )}
               
-              {/* Feedback CTA */}
-              {(currentResult || isCompareMode) && (
-                <Card className="mt-8 border-blue-200 bg-blue-50">
-                  <CardContent className="p-6 text-center">
-                    <h3 className="text-lg font-semibold text-blue-900 mb-2">
-                      How's your experience so far?
-                    </h3>
-                    <p className="text-blue-700 mb-4">
-                      Found a bug? Have an idea? This tool is constantly evolving based on user feedback.
-                    </p>
-                    <a 
-                      href="https://www.instagram.com/heart_wrench/" 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors"
-                    >
-                      <span>💬</span>
-                      Send Feedback on Instagram
-                    </a>
-                  </CardContent>
-                </Card>
-              )}
             </ClientOnly>
           </div>
         </div>
