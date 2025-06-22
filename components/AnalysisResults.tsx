@@ -1,6 +1,6 @@
 'use client';
 
-import { AnalysisResult } from '@/lib/api';
+import { AnalysisResult } from '@/lib/api-client';
 
 interface AnalysisResultsProps {
   result: AnalysisResult;

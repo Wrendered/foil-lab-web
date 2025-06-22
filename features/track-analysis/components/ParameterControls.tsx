@@ -15,6 +15,7 @@ interface ParameterControlsProps {
   onParametersChange?: (params: AnalysisParameters) => void;
   onReanalyze?: () => void;
   disabled?: boolean;
+  isAnalyzing?: boolean;
   className?: string;
 }
 
@@ -22,6 +23,7 @@ export function ParameterControls({
   onParametersChange,
   onReanalyze,
   disabled = false,
+  isAnalyzing = false,
   className = '',
 }: ParameterControlsProps) {
   const analysisStore = useAnalysisStore();
@@ -141,11 +143,20 @@ export function ParameterControls({
         </div>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Real-time Updates - Always enabled for now */}
+        {/* Analysis Status */}
         <div className="text-center py-2">
-          <p className="text-sm text-muted-foreground">
-            Real-time parameter updates enabled
-          </p>
+          {isAnalyzing ? (
+            <div className="flex items-center justify-center gap-2">
+              <RotateCcw className="h-3 w-3 animate-spin text-blue-600" />
+              <p className="text-sm text-blue-700 font-medium">
+                Analysis in progress - parameters locked
+              </p>
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              Real-time parameter updates enabled
+            </p>
+          )}
         </div>
 
 

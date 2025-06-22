@@ -12,10 +12,11 @@ import { useAnalysisStore } from '@/stores/analysisStore';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ClientOnly } from '@/components/ClientOnly';
-import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { ErrorBoundary, withErrorBoundary } from '@/components/ErrorBoundary';
 import { useConfig, useTrackAnalysis, useBatchAnalysis, useConnectionStatus } from '@/hooks/useApi';
 import { useToast } from '@/components/ui/toast';
 import { Loader2, Wifi, WifiOff, AlertCircle, CheckCircle } from 'lucide-react';
+import { APIError, isAPIError, isNetworkError, isServerError, isClientError } from '@/lib/api-client';
 
 export default function AnalyzePage() {
   const uploadStore = useUploadStore();
@@ -117,17 +118,73 @@ export default function AnalyzePage() {
           });
         },
         onError: (error) => {
-          analysisStore.setError(error.message);
+          const { title, description } = getErrorMessage(error);
+          analysisStore.setError(description);
           analysisStore.setAnalyzing(false);
 
           addToast({
-            title: 'Analysis Failed',
-            description: error.message,
+            title,
+            description,
             variant: 'error',
+            duration: 8000, // Show longer for errors
           });
         },
       }
     );
+  };
+
+  // Utility function to get user-friendly error messages
+  const getErrorMessage = (error: unknown): { title: string; description: string } => {
+    if (isNetworkError(error)) {
+      return {
+        title: 'Connection Error',
+        description: 'Unable to connect to the analysis server. Please check your internet connection and try again.'
+      };
+    }
+    
+    if (isServerError(error)) {
+      return {
+        title: 'Server Error',
+        description: 'The analysis server is experiencing issues. Please try again in a few moments.'
+      };
+    }
+    
+    if (isAPIError(error)) {
+      // Handle specific API error cases
+      if (error.status === 413) {
+        return {
+          title: 'File Too Large',
+          description: 'Your GPX file is too large. Please try with a smaller file (max 50MB).'
+        };
+      }
+      
+      if (error.status === 400 && error.message.includes('GPX')) {
+        return {
+          title: 'Invalid File Format',
+          description: 'Please upload a valid GPX file. Other file formats are not supported.'
+        };
+      }
+      
+      if (error.status === 400 && error.message.includes('empty')) {
+        return {
+          title: 'Empty File',
+          description: 'The file appears to be empty or corrupted. Please try with a different file.'
+        };
+      }
+      
+      if (error.status === 400) {
+        return {
+          title: 'File Processing Error',
+          description: error.message || 'Unable to process this GPX file. Please check the file format and try again.'
+        };
+      }
+    }
+    
+    // Fallback for unknown errors
+    return {
+      title: 'Analysis Failed',
+      description: 'Something went wrong during analysis. Please try again or contact support if the problem persists.'
+    };
   };
 
   const handleAnalyzeAll = () => {
@@ -151,10 +208,12 @@ export default function AnalyzePage() {
           });
         },
         onError: (error) => {
+          const { title, description } = getErrorMessage(error);
           addToast({
-            title: 'Batch Analysis Failed',
-            description: error.message,
+            title: `Batch ${title}`,
+            description: `Some files failed to process: ${description}`,
             variant: 'error',
+            duration: 10000, // Show longer for batch errors
           });
         },
       }
@@ -242,11 +301,13 @@ export default function AnalyzePage() {
                 <CardTitle>Upload GPX Files</CardTitle>
               </CardHeader>
               <CardContent>
-                <FileUpload
-                  onFileSelect={handleFileSelect}
-                  multiple={true}
-                  className="mb-4"
-                />
+                <ErrorBoundary fallback={FileUploadErrorFallback}>
+                  <FileUpload
+                    onFileSelect={handleFileSelect}
+                    multiple={true}
+                    className="mb-4"
+                  />
+                </ErrorBoundary>
 
                 <ClientOnly>
                   {/* Batch Actions */}
@@ -271,7 +332,7 @@ export default function AnalyzePage() {
             <ParameterControls
               onParametersChange={(params) => {
                 // Parameters already updated via store in ParameterControls
-                console.log('Parameters updated:', params);
+                // Could add analytics tracking here if needed
               }}
               onReanalyze={() => {
                 // Re-analyze current file with new parameters
@@ -280,6 +341,7 @@ export default function AnalyzePage() {
                 }
               }}
               disabled={analysisStore.isAnalyzing || !connectionStatus.isConnected}
+              isAnalyzing={analysisStore.isAnalyzing}
             />
           </div>
 
@@ -389,5 +451,34 @@ export default function AnalyzePage() {
         </Card>
       </div>
     </ErrorBoundary>
+  );
+}
+
+// Error fallback for file upload component
+function FileUploadErrorFallback({
+  error,
+  resetError,
+}: {
+  error: Error;
+  resetError: () => void;
+}) {
+  return (
+    <div className="border border-red-200 rounded-lg p-4 bg-red-50">
+      <div className="flex items-center gap-2 mb-2">
+        <AlertCircle className="h-4 w-4 text-red-600" />
+        <span className="text-sm font-medium text-red-800">File upload error</span>
+      </div>
+      <p className="text-sm text-red-700 mb-3">
+        Something went wrong with the file upload. This could be due to a corrupted file or browser issue.
+      </p>
+      <Button
+        onClick={resetError}
+        size="sm"
+        variant="outline"
+        className="border-red-300 text-red-700 hover:bg-red-100"
+      >
+        Try Again
+      </Button>
+    </div>
   );
 }
