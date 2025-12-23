@@ -8,7 +8,7 @@
 
 ```
 ┌─────────────────────────────────────┐      ┌─────────────────────────────────────┐
-│   foil-lab-web (THIS REPO)          │      │   strava-tracks-analyzer            │
+│   foil-lab-web                      │      │   strava-tracks-analyzer            │
 │   Next.js Frontend                  │ ───► │   Python Backend                    │
 │                                     │      │                                     │
 │   • File upload UI                  │      │   • GPX parsing (core/gpx.py)       │
@@ -17,11 +17,21 @@
 │   • Polar plots                     │      │   • VMG & angle calculations        │
 │   • Comparison views                │      │   • Performance metrics             │
 │                                     │      │                                     │
-│   Deployed: Vercel (?)              │      │   Deployed: Railway                 │
-│   Status: Active, being cleaned     │      │   Status: 2 months stale            │
+│   Deployed: Vercel (MOVING)         │      │   Deployed: Railway                 │
+│   Status: ✅ Phase 1 done           │      │   Status: 2 months stale            │
 └─────────────────────────────────────┘      └─────────────────────────────────────┘
          UI ONLY                                    ALL THE MATH
 ```
+
+## Decision: Keep 2 Repos
+- Simpler than monorepo migration
+- Independent deployments
+- Can revisit monorepo later if needed
+
+## Decision: All Railway
+- Moving frontend from Vercel → Railway
+- Single platform, single billing, private networking possible
+- Railway Pro account available
 
 ### Key Files in Backend (strava-tracks-analyzer)
 
@@ -200,15 +210,62 @@ NEXT_PUBLIC_APP_ENV=development
 
 ---
 
+## Execution Order
+
+```
+1. [DONE] Frontend cleanup (Phase 1) - PR merged
+2. [NEXT] Backend assessment & cleanup (strava-tracks-analyzer)
+   - Explore code quality
+   - Identify algorithm issues
+   - Remove dead code (old Streamlit?)
+   - Fix bugs
+3. [THEN] Move frontend to Railway
+   - Add foil-lab-web to Railway
+   - Set env vars
+   - Disconnect Vercel
+4. [LATER] Frontend robustness & testing (Phase 2-3)
+```
+
+**Rationale:** Clean up backend first so we deploy good code, then consolidate to Railway.
+
+---
+
+## Phase 5: Railway Migration (after backend cleanup)
+
+### 5.1 Add Frontend to Railway
+- Railway Dashboard → New Service → GitHub Repo → foil-lab-web
+- Railway auto-detects Next.js
+
+### 5.2 Environment Variables
+```
+NEXT_PUBLIC_API_URL=https://strava-tracks-analyzer-production.up.railway.app
+NEXT_PUBLIC_APP_ENV=production
+NEXT_PUBLIC_ENABLE_WIND_LINES=true
+NEXT_PUBLIC_ENABLE_VMG_HIGHLIGHT=true
+```
+
+### 5.3 Optional: Private Networking
+- Once both on Railway, can use internal URLs
+- `NEXT_PUBLIC_API_URL=http://strava-tracks-analyzer.railway.internal`
+- Faster, more secure
+
+### 5.4 Cleanup
+- Disconnect repo from Vercel
+- Delete Vercel project
+- Update any DNS if custom domain
+
+---
+
 ## Status Summary
 
 | Item | Status |
 |------|--------|
-| Frontend cleanup (Phase 1) | ✅ DONE (uncommitted on branch) |
-| Frontend robustness (Phase 2) | 🔜 Not started |
-| Frontend testing (Phase 3) | 🔜 Not started |
-| Backend assessment | ❓ Need to explore |
-| Backend algorithms | ❓ Need to understand issues first |
+| Frontend cleanup (Phase 1) | ✅ DONE - PR #1 merged |
+| Backend assessment | 🔜 NEXT |
+| Backend cleanup | 🔜 After assessment |
+| Railway migration | 🔜 After backend cleanup |
+| Frontend robustness (Phase 2) | ⏸️ Later |
+| Frontend testing (Phase 3) | ⏸️ Later |
 | Documentation (both repos) | ⚠️ Stale, needs update |
 
 ---
