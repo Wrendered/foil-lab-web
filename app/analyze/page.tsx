@@ -17,6 +17,7 @@ import { useConfig, useTrackAnalysis, useBatchAnalysis, useConnectionStatus } fr
 import { useToast } from '@/components/ui/toast';
 import { Loader2, Wifi, WifiOff, AlertCircle, CheckCircle } from 'lucide-react';
 import { APIError, isAPIError, isNetworkError, isServerError, isClientError } from '@/lib/api-client';
+import { DEFAULT_PARAMETERS } from '@/lib/defaults';
 
 export default function AnalyzePage() {
   const uploadStore = useUploadStore();
@@ -41,11 +42,11 @@ export default function AnalyzePage() {
   useEffect(() => {
     if (config) {
       analysisStore.updateParameters({
-        windDirection: config.defaults.wind_direction,
-        angleTolerance: config.defaults.angle_tolerance,
-        minSpeed: config.defaults.min_speed || 8.0,
-        minDistance: config.defaults.min_distance,
-        minDuration: config.defaults.min_duration,
+        windDirection: config.defaults.wind_direction || DEFAULT_PARAMETERS.windDirection,
+        angleTolerance: config.defaults.angle_tolerance || DEFAULT_PARAMETERS.angleTolerance,
+        minSpeed: config.defaults.min_speed || DEFAULT_PARAMETERS.minSpeed,
+        minDistance: config.defaults.min_distance || DEFAULT_PARAMETERS.minDistance,
+        minDuration: config.defaults.min_duration || DEFAULT_PARAMETERS.minDuration,
       });
     }
   }, [config]); // Remove analysisStore from dependencies

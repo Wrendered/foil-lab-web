@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 import { GPSPoint, GPXMetadata } from '@/lib/gpx-parser';
+import { AnalysisResult } from '@/lib/api-client';
 
 export interface FileWithMetadata {
   file: File;
@@ -10,7 +11,7 @@ export interface FileWithMetadata {
   uploadProgress: number;
   status: 'pending' | 'uploading' | 'processing' | 'completed' | 'error';
   error?: string;
-  result?: any;
+  result?: AnalysisResult;
   gpsData?: GPSPoint[];
   metadata?: GPXMetadata;
 }
@@ -25,7 +26,7 @@ interface UploadState {
   removeFile: (id: string) => void;
   updateFileProgress: (id: string, progress: number) => void;
   updateFileStatus: (id: string, status: FileWithMetadata['status'], error?: string) => void;
-  setFileResult: (id: string, result: any) => void;
+  setFileResult: (id: string, result: AnalysisResult) => void;
   setFileGPSData: (id: string, gpsData: GPSPoint[], metadata: GPXMetadata) => void;
   setCurrentFileId: (id: string | null) => void;
   clearCompleted: () => void;

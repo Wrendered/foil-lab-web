@@ -27,21 +27,24 @@ export function ComparisonView() {
   const aggregateStats = useMemo(() => {
     if (analyzedFiles.length === 0) return null;
 
-    const allResults = analyzedFiles.map(f => f.result);
-    
+    // Filter out undefined results and get typed array
+    const allResults = analyzedFiles
+      .map(f => f.result)
+      .filter((r): r is NonNullable<typeof r> => r !== undefined);
+
     // VMG statistics
     const vmgValues = allResults
       .map(r => r.performance_metrics?.vmg_upwind)
-      .filter(v => v !== null && v !== undefined);
-    
-    const avgVMG = vmgValues.length > 0 
-      ? vmgValues.reduce((a, b) => a + b, 0) / vmgValues.length 
+      .filter((v): v is number => v !== null && v !== undefined);
+
+    const avgVMG = vmgValues.length > 0
+      ? vmgValues.reduce((a, b) => a + b, 0) / vmgValues.length
       : null;
-    
-    const bestVMG = vmgValues.length > 0 
+
+    const bestVMG = vmgValues.length > 0
       ? Math.max(...vmgValues)
       : null;
-    
+
     const worstVMG = vmgValues.length > 0
       ? Math.min(...vmgValues)
       : null;
@@ -49,8 +52,8 @@ export function ComparisonView() {
     // Speed statistics
     const speedValues = allResults
       .map(r => r.performance_metrics?.avg_speed)
-      .filter(v => v !== null && v !== undefined);
-    
+      .filter((v): v is number => v !== null && v !== undefined);
+
     const avgSpeed = speedValues.length > 0
       ? speedValues.reduce((a, b) => a + b, 0) / speedValues.length
       : null;
@@ -62,7 +65,7 @@ export function ComparisonView() {
     // Angle statistics
     const angleValues = allResults
       .map(r => r.performance_metrics?.best_upwind_angle)
-      .filter(v => v !== null && v !== undefined);
+      .filter((v): v is number => v !== null && v !== undefined);
     
     const bestAngle = angleValues.length > 0
       ? Math.min(...angleValues)
@@ -185,9 +188,11 @@ export function ComparisonView() {
               <tbody>
                 {analyzedFiles.map((file, index) => {
                   const result = file.result;
+                  if (!result) return null;
                   const metrics = result.performance_metrics;
                   const summary = result.track_summary;
-                  
+                  const referenceMetrics = analyzedFiles[0]?.result?.performance_metrics;
+
                   return (
                     <tr key={file.id} className="border-b hover:bg-gray-50">
                       <td className="p-2">
@@ -203,8 +208,8 @@ export function ComparisonView() {
                         </div>
                       </td>
                       <td className="text-center p-2 text-sm">
-                        {file.metadata?.time ? 
-                          new Date(file.metadata.time).toLocaleDateString() : 
+                        {file.metadata?.time ?
+                          new Date(file.metadata.time).toLocaleDateString() :
                           '-'
                         }
                       </td>
@@ -214,8 +219,8 @@ export function ComparisonView() {
                             {metrics?.vmg_upwind ? formatSpeed(metrics.vmg_upwind) : '-'}
                           </span>
                           {index > 0 && getTrendIcon(
-                            metrics?.vmg_upwind,
-                            analyzedFiles[0].result.performance_metrics?.vmg_upwind,
+                            metrics?.vmg_upwind ?? null,
+                            referenceMetrics?.vmg_upwind ?? null,
                             true
                           )}
                         </div>
@@ -229,26 +234,26 @@ export function ComparisonView() {
                             {metrics?.best_upwind_angle ? formatAngle(metrics.best_upwind_angle) : '-'}
                           </span>
                           {index > 0 && getTrendIcon(
-                            metrics?.best_upwind_angle,
-                            analyzedFiles[0].result.performance_metrics?.best_upwind_angle,
+                            metrics?.best_upwind_angle ?? null,
+                            referenceMetrics?.best_upwind_angle ?? null,
                             false // Lower angle is better
                           )}
                         </div>
                       </td>
                       <td className="text-center p-2">
-                        {summary?.total_distance ? 
-                          formatDistance(summary.total_distance * 1000) : 
+                        {summary?.total_distance ?
+                          formatDistance(summary.total_distance * 1000) :
                           '-'
                         }
                       </td>
                       <td className="text-center p-2">
-                        {summary?.duration_seconds ? 
-                          formatDuration(summary.duration_seconds) : 
+                        {summary?.duration_seconds ?
+                          formatDuration(summary.duration_seconds) :
                           '-'
                         }
                       </td>
                       <td className="text-center p-2">
-                        {result.segments?.length || 0}
+                        {result.segments?.length ?? 0}
                       </td>
                     </tr>
                   );

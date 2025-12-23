@@ -10,6 +10,8 @@ import { RotateCcw, Play, Settings2 } from 'lucide-react';
 import { useAnalysisStore } from '@/stores/analysisStore';
 import { useConfig } from '@/hooks/useApi';
 import { AnalysisParameters } from '@/stores/analysisStore';
+import { ConfigResponse } from '@/lib/api-client';
+import { DEFAULT_PARAMETERS, DEFAULT_RANGES } from '@/lib/defaults';
 
 interface ParameterControlsProps {
   onParametersChange?: (params: AnalysisParameters) => void;
@@ -41,11 +43,11 @@ export function ParameterControls({
   useEffect(() => {
     if (config) {
       reset({
-        windDirection: config.defaults.wind_direction || 90,
-        angleTolerance: config.defaults.angle_tolerance || 25,
-        minSpeed: config.defaults.min_speed || 8.0,
-        minDistance: config.defaults.min_distance || 100,
-        minDuration: config.defaults.min_duration || 10,
+        windDirection: config.defaults.wind_direction || DEFAULT_PARAMETERS.windDirection,
+        angleTolerance: config.defaults.angle_tolerance || DEFAULT_PARAMETERS.angleTolerance,
+        minSpeed: config.defaults.min_speed || DEFAULT_PARAMETERS.minSpeed,
+        minDistance: config.defaults.min_distance || DEFAULT_PARAMETERS.minDistance,
+        minDuration: config.defaults.min_duration || DEFAULT_PARAMETERS.minDuration,
       });
     }
   }, [config, reset]);
@@ -76,16 +78,14 @@ export function ParameterControls({
   ]);
 
   const handleResetToDefaults = () => {
-    if (config) {
-      const defaultParams = {
-        windDirection: config.defaults.wind_direction || 90,
-        angleTolerance: config.defaults.angle_tolerance || 25,
-        minSpeed: config.defaults.min_speed || 8.0,
-        minDistance: config.defaults.min_distance || 100,
-        minDuration: config.defaults.min_duration || 10,
-      };
-      reset(defaultParams);
-    }
+    const defaultParams = {
+      windDirection: config?.defaults.wind_direction || DEFAULT_PARAMETERS.windDirection,
+      angleTolerance: config?.defaults.angle_tolerance || DEFAULT_PARAMETERS.angleTolerance,
+      minSpeed: config?.defaults.min_speed || DEFAULT_PARAMETERS.minSpeed,
+      minDistance: config?.defaults.min_distance || DEFAULT_PARAMETERS.minDistance,
+      minDuration: config?.defaults.min_duration || DEFAULT_PARAMETERS.minDuration,
+    };
+    reset(defaultParams);
   };
 
   const handleManualReanalyze = () => {
@@ -101,12 +101,12 @@ export function ParameterControls({
     onReanalyze?.();
   };
 
-  const getRanges = (config: any) => ({
-    windDirection: config?.ranges?.wind_direction || { min: 0, max: 360, step: 1 },
-    angleTolerance: config?.ranges?.angle_tolerance || { min: 5, max: 45, step: 1 },
-    minSpeed: config?.ranges?.min_speed || { min: 1, max: 20, step: 0.1 },
-    minDistance: config?.ranges?.min_distance || { min: 50, max: 500, step: 10 },
-    minDuration: config?.ranges?.min_duration || { min: 5, max: 60, step: 1 },
+  const getRanges = (config: ConfigResponse | undefined) => ({
+    windDirection: config?.ranges?.wind_direction || DEFAULT_RANGES.windDirection,
+    angleTolerance: config?.ranges?.angle_tolerance || DEFAULT_RANGES.angleTolerance,
+    minSpeed: config?.ranges?.min_speed || DEFAULT_RANGES.minSpeed,
+    minDistance: config?.ranges?.min_distance || DEFAULT_RANGES.minDistance,
+    minDuration: config?.ranges?.min_duration || DEFAULT_RANGES.minDuration,
   });
 
   const ranges = getRanges(config);

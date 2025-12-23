@@ -179,7 +179,7 @@ export function useRetryMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (queryKey: any[]) => {
+    mutationFn: async (queryKey: readonly unknown[]) => {
       await queryClient.refetchQueries({ queryKey });
     },
   });
