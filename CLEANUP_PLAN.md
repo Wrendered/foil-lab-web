@@ -33,6 +33,12 @@
 - Single platform, single billing, private networking possible
 - Railway Pro account available
 
+### Current URLs
+- **Frontend (Vercel - keeping)**: https://foil-lab-web.vercel.app
+- **Backend (Railway)**: https://strava-tracks-analyzer-production.up.railway.app
+
+> **NOTE**: Keep Vercel free tier running with redirect/link to new Railway app after migration.
+
 ### Key Files in Backend (strava-tracks-analyzer)
 
 | File | Purpose |
@@ -43,8 +49,6 @@
 | `core/segments/` | Track segmentation logic |
 | `core/metrics.py` | Performance calculations (VMG, angles) |
 | `core/gpx.py` | GPX file parsing |
-| `app.py` | OLD Streamlit UI (legacy, probably unused) |
-
 ### API Endpoints (called by frontend)
 
 - `GET /api/config` - Parameter defaults and ranges
@@ -63,12 +67,12 @@
 - [ ] Polar plot edge cases (recent reverts suggest issues)
 
 ### Backend (strava-tracks-analyzer) - Algorithm issues
-- [ ] Wind estimation accuracy/robustness
-- [ ] Upwind angle calculation bugs
-- [ ] Track segmentation logic
+- [x] Wind estimation accuracy/robustness - **VERIFIED: Iterative algorithm is correct**
+- [ ] Upwind angle calculation bugs - investigate if still present
+- [ ] Track segmentation logic - review
 - [ ] Edge case handling (short tracks, bad GPS data)
-- [ ] Code cleanup (has old Streamlit stuff mixed in)
-- [ ] Testing (unknown status)
+- [x] Code cleanup (removed Streamlit, consolidated wind) - **DONE: 6,988 lines deleted**
+- [ ] Testing (only 4% coverage - needs improvement)
 - [ ] Documentation
 
 ---
@@ -148,33 +152,100 @@
 
 ---
 
-## Phase 4: Backend Overhaul (strava-tracks-analyzer)
+## Phase 4: Backend Overhaul (strava-tracks-analyzer) - COMPLETED
 
-> **This is a SEPARATE REPO** - work tracked here for context but executed there.
+> **This is a SEPARATE REPO** - Branch: `cleanup/remove-streamlit-consolidate-wind`
 
-### 4.1 Assessment Needed
-- [ ] Review algorithm code quality in `core/`
-- [ ] Identify specific bugs in wind estimation
-- [ ] Check test coverage (if any exists)
-- [ ] Audit old Streamlit code - can `app.py` be removed?
-- [ ] Review deployment setup on Railway
+### 4.1 Cleanup Complete - 6,988 Lines Deleted!
 
-### 4.2 Potential Algorithm Improvements
-- [ ] Wind estimation robustness (what are the known issues?)
-- [ ] Upwind angle calculation accuracy
-- [ ] Better handling of noisy GPS data
-- [ ] Edge cases: short sessions, drifting, transitions
+**Files Removed:**
+- `app.py` - Streamlit entry point
+- `ui/` - Complete folder (2,700+ LOC of Streamlit components)
+- `adapters/streamlit_state.py`, `adapters/memory_state.py`
+- `services/state.py`, `services/segment_service.py`
+- `utils/state_manager.py`, `utils/visualization.py`, `utils/gpx_parser.py`
+- `core/wind/direction.py`, `core/wind/estimate.py`, `core/wind/estimator.py`
+- `core/wind_estimation_helpers.py`
+- `.streamlit/config.toml`
 
-### 4.3 Code Cleanup
-- [ ] Remove Streamlit remnants if not needed
-- [ ] Consolidate duplicate/dead code
-- [ ] Improve documentation
-- [ ] Add/improve tests
+**Files Simplified:**
+- `core/wind/factory.py` - Now only 2 methods (iterative, weighted)
+- `services/wind_service.py` - Removed state dependencies
+- `api/main.py` - Removed unused state registration
+- `requirements.txt` - Removed 20+ unused packages
 
-### 4.4 Deployment
-- [ ] Ensure Railway deployment is up to date
-- [ ] Set up proper CI/CD if not exists
-- [ ] Document deployment process
+### 4.2 Original Assessment - Score: 5.3/10
+
+**Repository Stats:**
+- 70 Python files, ~14,300 LOC
+- Only 601 LOC of tests (~4% coverage)
+- 2,700+ LOC of legacy Streamlit UI
+
+### 4.2 Critical Issues Found
+
+#### Wind Estimation Chaos (7 functions across 5 files!)
+```
+core/wind/direction.py      - estimate_wind_direction_from_upwind_tacks() (496 LOC)
+core/wind/algorithms.py     - estimate_wind_direction_iterative() (453 LOC)
+core/wind/algorithms.py     - estimate_wind_direction_weighted()
+core/wind/factory.py        - estimate_wind_direction_factory()
+core/wind/estimate.py       - estimate_wind_direction()
+core/wind_estimation_helpers.py - estimate_wind_from_tacks()
+core/metrics_advanced.py    - estimate_wind_direction_weighted() (DUPLICATE!)
+```
+**Problem**: Unclear which function is the source of truth. Multiple implementations.
+
+#### Duplicate Code
+| Area | Files | Issue |
+|------|-------|-------|
+| Visualization | `ui/components/visualization.py` + `utils/visualization.py` | Two modules, 782 LOC total |
+| Segments | `segment_analysis.py` + `segment_service.py` | Overlapping responsibility |
+| GPX Parsing | `core/gpx.py` + `utils/gpx_parser.py` | Two parsers |
+| State | `services/state.py` + `utils/state_manager.py` | Legacy + new |
+
+#### Test Coverage Crisis
+- Only wind module has tests (3 files)
+- ZERO tests for: segments, GPX parsing, metrics, API endpoints
+- No pytest.ini, no CI/CD
+
+#### Legacy Streamlit Code
+- `app.py` (256 LOC) - still the entry point
+- `ui/` directory - 2,700+ LOC of components
+- Decision needed: sunset or maintain parallel?
+
+### 4.3 Cleanup Priorities
+
+**Immediate (before Railway migration):**
+- [ ] Consolidate wind estimation (7 functions → 1-2)
+- [ ] Remove duplicate visualization module
+- [ ] Remove legacy state manager (`utils/state_manager.py`)
+- [ ] Add .env support for configuration
+- [ ] Decide on Streamlit: remove or keep?
+
+**Short-term:**
+- [ ] Consolidate segment services
+- [ ] Remove duplicate GPX parser
+- [ ] Add 50+ unit tests for core algorithms
+- [ ] Add API endpoint tests
+- [ ] Add Dockerfile
+
+**Medium-term:**
+- [ ] Add CI/CD (GitHub Actions)
+- [ ] Increase test coverage to 80%+
+- [ ] Performance: reduce 57 `.copy()` operations on dataframes
+- [ ] Add caching strategy
+
+### 4.4 Files to Likely Delete
+- `utils/state_manager.py` - legacy state management
+- `utils/gpx_parser.py` - duplicate of `core/gpx.py`
+- One of: `ui/components/visualization.py` OR `utils/visualization.py`
+- Possibly entire `ui/` folder if sunsetting Streamlit
+
+### 4.5 Deployment Status
+- Railway deployment exists and works
+- No Dockerfile in repo
+- No `railway.toml` config file
+- No CI/CD pipeline visible
 
 ---
 
@@ -214,19 +285,22 @@ NEXT_PUBLIC_APP_ENV=development
 
 ```
 1. [DONE] Frontend cleanup (Phase 1) - PR merged
-2. [NEXT] Backend assessment & cleanup (strava-tracks-analyzer)
-   - Explore code quality
-   - Identify algorithm issues
-   - Remove dead code (old Streamlit?)
-   - Fix bugs
-3. [THEN] Move frontend to Railway
+2. [DONE] Backend assessment - Score 5.3/10, critical issues identified
+3. [DONE] Backend cleanup (strava-tracks-analyzer) - 6,988 lines deleted!
+   ✓ Removed Streamlit entirely
+   ✓ Consolidated 7 wind functions → 2 (iterative + weighted)
+   ✓ Removed duplicate code (visualization, GPX parser, state manager)
+   ✓ Verified iterative algorithm is the correct approach
+4. [NEXT] Move frontend to Railway
+   - Merge backend cleanup PR first
    - Add foil-lab-web to Railway
    - Set env vars
-   - Disconnect Vercel
-4. [LATER] Frontend robustness & testing (Phase 2-3)
+   - Keep Vercel with redirect to Railway
+5. [LATER] Frontend robustness & testing (Phase 2-3)
+6. [LATER] Backend testing (only 4% coverage)
 ```
 
-**Rationale:** Clean up backend first so we deploy good code, then consolidate to Railway.
+**Backend cleanup branch:** `cleanup/remove-streamlit-consolidate-wind` in strava-tracks-analyzer
 
 ---
 
@@ -249,10 +323,10 @@ NEXT_PUBLIC_ENABLE_VMG_HIGHLIGHT=true
 - `NEXT_PUBLIC_API_URL=http://strava-tracks-analyzer.railway.internal`
 - Faster, more secure
 
-### 5.4 Cleanup
-- Disconnect repo from Vercel
-- Delete Vercel project
-- Update any DNS if custom domain
+### 5.4 Vercel Handling
+- Keep Vercel free tier running (https://foil-lab-web.vercel.app)
+- Update Vercel app to redirect/link to Railway URL
+- Don't delete - just point users to new location
 
 ---
 
@@ -261,12 +335,13 @@ NEXT_PUBLIC_ENABLE_VMG_HIGHLIGHT=true
 | Item | Status |
 |------|--------|
 | Frontend cleanup (Phase 1) | ✅ DONE - PR #1 merged |
-| Backend assessment | 🔜 NEXT |
-| Backend cleanup | 🔜 After assessment |
-| Railway migration | 🔜 After backend cleanup |
+| Backend assessment | ✅ DONE - Score 5.3/10, see Phase 4 |
+| Backend cleanup | ✅ DONE - 6,988 lines deleted, branch ready |
+| Wind algorithm evaluation | ✅ DONE - Iterative is the correct approach |
+| Railway migration | 🔜 NEXT |
 | Frontend robustness (Phase 2) | ⏸️ Later |
 | Frontend testing (Phase 3) | ⏸️ Later |
-| Documentation (both repos) | ⚠️ Stale, needs update |
+| Backend testing | ⏸️ Later (4% coverage needs work) |
 
 ---
 
