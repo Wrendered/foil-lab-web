@@ -1,11 +1,11 @@
 'use client';
 
 import React, { useCallback, useState } from 'react';
-import { useDropzone } from 'react-dropzone';
+import { useDropzone, FileRejection, ErrorCode } from 'react-dropzone';
 import { Upload, X, FileText, AlertCircle, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useUploadStore } from '@/stores/uploadStore';
-import { parseGPXFile } from '@/lib/gpx-parser';
+import { useUploadStore, FileWithMetadata } from '@/stores/uploadStore';
+import { parseGPXFile, GPXMetadata } from '@/lib/gpx-parser';
 import { cn } from '@/lib/utils';
 
 interface FileUploadProps {
@@ -27,7 +27,7 @@ export function FileUpload({
   >([]);
 
   const onDrop = useCallback(
-    (acceptedFiles: File[], fileRejections: any[]) => {
+    (acceptedFiles: File[], fileRejections: FileRejection[]) => {
       // Clear previous rejections
       setRejectedFiles([]);
 
@@ -43,11 +43,11 @@ export function FileUpload({
       if (fileRejections.length > 0) {
         const rejected = fileRejections.map((rejection) => ({
           file: rejection.file,
-          errors: rejection.errors.map((e: any) => {
-            if (e.code === 'file-invalid-type') {
+          errors: rejection.errors.map((e) => {
+            if (e.code === ErrorCode.FileInvalidType) {
               return 'Only GPX files are allowed';
             }
-            if (e.code === 'file-too-large') {
+            if (e.code === ErrorCode.FileTooLarge) {
               return `File is too large (max ${(maxSize / 1024 / 1024).toFixed(
                 0
               )}MB)`;
@@ -72,20 +72,27 @@ export function FileUpload({
       multiple,
     });
 
-  const extractGPXMetadata = async (file: File): Promise<any> => {
+  interface ExtractedMetadata {
+    points: number;
+    time: string | null;
+    name: string | null;
+    bounds: GPXMetadata['bounds'];
+  }
+
+  const extractGPXMetadata = async (file: File): Promise<ExtractedMetadata | null> => {
     try {
       const { gpsPoints, metadata } = await parseGPXFile(file);
-      
+
       // Store GPS data in the upload store
       const fileId = files.find(f => f.file === file)?.id;
       if (fileId) {
         setFileGPSData(fileId, gpsPoints, metadata);
       }
-      
+
       return {
         points: metadata.points,
-        time: metadata.time,
-        name: metadata.name,
+        time: metadata.time ?? null,
+        name: metadata.name ?? null,
         bounds: metadata.bounds
       };
     } catch (error) {
@@ -185,14 +192,19 @@ export function FileUpload({
   );
 }
 
+interface FileItemMetadata {
+  points: number;
+  time: string | null;
+}
+
 interface FileItemProps {
-  file: any;
+  file: FileWithMetadata;
   onRemove: () => void;
-  onMetadataLoad?: (file: File) => Promise<any>;
+  onMetadataLoad?: (file: File) => Promise<FileItemMetadata | null>;
 }
 
 function FileItem({ file, onRemove, onMetadataLoad }: FileItemProps) {
-  const [metadata, setMetadata] = useState<any>(null);
+  const [metadata, setMetadata] = useState<FileItemMetadata | null>(null);
   const [loading, setLoading] = useState(true);
 
   React.useEffect(() => {

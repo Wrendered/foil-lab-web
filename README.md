@@ -170,7 +170,7 @@ npm run build
 - **Styling**: Tailwind CSS
 - **State**: Zustand
 - **Maps**: Leaflet
-- **Charts**: Recharts
+- **Charts**: Custom SVG (SimplePolarPlot)
 - **API**: React Query
 - **Deployment**: Vercel
 

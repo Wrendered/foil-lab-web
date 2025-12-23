@@ -1,5 +1,10 @@
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
+import { TrackSegment } from '@/lib/api-client';
+import { DEFAULT_PARAMETERS } from '@/lib/defaults';
+
+// Re-export for convenience
+export type { TrackSegment };
 
 export interface AnalysisParameters {
   windDirection: number;
@@ -9,20 +14,6 @@ export interface AnalysisParameters {
   minDuration: number;
 }
 
-export interface TrackSegment {
-  id: number;
-  start_idx: number;
-  end_idx: number;
-  distance: number;
-  duration: number;
-  avg_speed_knots: number;
-  bearing: number;
-  angle_to_wind: number;
-  tack: 'Port' | 'Starboard';
-  direction: 'Upwind' | 'Downwind';
-  sailing_type: string;
-}
-
 export interface WindAnalysis {
   estimatedDirection: number;
   confidence: 'High' | 'Medium' | 'Low';
@@ -30,6 +21,8 @@ export interface WindAnalysis {
   isOverridden: boolean;
 }
 
+// Note: This is the frontend-transformed version of PerformanceMetrics (camelCase).
+// The API version in api-client.ts uses snake_case to match the backend response.
 export interface PerformanceMetrics {
   avgSpeed: number | null;
   avgUpwindAngle: number | null;
@@ -80,13 +73,7 @@ export const useAnalysisStore = create<AnalysisState>()(
     segments: [],
     windAnalysis: null,
     performanceMetrics: null,
-    parameters: {
-      windDirection: 90,
-      angleTolerance: 25,
-      minSpeed: 8.0,
-      minDistance: 75,
-      minDuration: 15,
-    },
+    parameters: { ...DEFAULT_PARAMETERS },
     isAnalyzing: false,
     error: null,
     selectedSegmentIds: [],
@@ -180,7 +167,7 @@ export const useAnalysisStore = create<AnalysisState>()(
           state.windAnalysis.estimatedDirection = state.windAnalysis.algorithmDirection;
           state.windAnalysis.isOverridden = false;
         }
-        state.parameters.windDirection = state.windAnalysis?.algorithmDirection || 90;
+        state.parameters.windDirection = state.windAnalysis?.algorithmDirection || DEFAULT_PARAMETERS.windDirection;
       }),
 
     reset: () =>

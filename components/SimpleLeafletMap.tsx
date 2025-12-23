@@ -1,21 +1,24 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import type { Map as LeafletMap, Layer } from 'leaflet';
+import { TrackSegment } from '@/lib/api-client';
 
 interface SimpleLeafletMapProps {
   gpxData?: Array<{ latitude: number; longitude: number; time?: string }>;
-  segments?: any[];
+  segments?: TrackSegment[];
   windDirection?: number;
   highlightVMG?: boolean;
   vmgSegmentIds?: number[];
 }
 
 export function SimpleLeafletMap({ gpxData = [], segments = [], windDirection = 0, highlightVMG = false, vmgSegmentIds = [] }: SimpleLeafletMapProps) {
-  const mapRef = useRef<any>(null);
+  const mapRef = useRef<LeafletMap | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const layersRef = useRef<any[]>([]);
+  const layersRef = useRef<Layer[]>([]);
+  const boundsSetRef = useRef(false);
 
-  const updateMapContent = (L: any) => {
+  const updateMapContent = (L: typeof import('leaflet')) => {
     const map = mapRef.current;
     if (!map) return;
 
@@ -29,7 +32,7 @@ export function SimpleLeafletMap({ gpxData = [], segments = [], windDirection = 
 
     // Add GPS track and segments
     if (gpxData.length > 0) {
-      const trackCoords = gpxData.map(p => [p.latitude, p.longitude]);
+      const trackCoords: [number, number][] = gpxData.map(p => [p.latitude, p.longitude]);
       
       // Draw full track in gray first
       const trackLayer = L.polyline(trackCoords, {
@@ -76,15 +79,15 @@ export function SimpleLeafletMap({ gpxData = [], segments = [], windDirection = 
       layersRef.current.push(startMarker, endMarker);
 
       // Only fit bounds when creating new map or switching files, not for VMG toggle
-      if (!map._boundsSet) {
+      if (!boundsSetRef.current) {
         const lats = gpxData.map(p => p.latitude);
         const lngs = gpxData.map(p => p.longitude);
-        const bounds = [
+        const bounds: [[number, number], [number, number]] = [
           [Math.min(...lats), Math.min(...lngs)],
           [Math.max(...lats), Math.max(...lngs)]
         ];
         map.fitBounds(bounds, { padding: [20, 20] });
-        map._boundsSet = true; // Mark that bounds have been set
+        boundsSetRef.current = true;
       }
     }
   };
@@ -106,8 +109,10 @@ export function SimpleLeafletMap({ gpxData = [], segments = [], windDirection = 
       
       // Clear container for new map
       if (containerRef.current) {
-        containerRef.current.innerHTML = '';
-        (containerRef.current as any)._leaflet_id = null;
+        while (containerRef.current.firstChild) {
+          containerRef.current.removeChild(containerRef.current.firstChild);
+        }
+        (containerRef.current as HTMLDivElement & { _leaflet_id?: number })._leaflet_id = undefined;
       }
 
       // Determine center coordinates with validation
@@ -136,7 +141,7 @@ export function SimpleLeafletMap({ gpxData = [], segments = [], windDirection = 
         maxZoom: 19
       });
       
-      tileLayer.on('tileerror', (e: any) => {
+      tileLayer.on('tileerror', (e) => {
         console.error('Tile loading error:', e);
       });
       
@@ -163,9 +168,14 @@ export function SimpleLeafletMap({ gpxData = [], segments = [], windDirection = 
         mapRef.current = null;
       }
       if (containerRef.current) {
-        containerRef.current.innerHTML = '';
-        (containerRef.current as any)._leaflet_id = null;
+        // Clear container using safe DOM methods
+        while (containerRef.current.firstChild) {
+          containerRef.current.removeChild(containerRef.current.firstChild);
+        }
+        // Clear Leaflet's internal container ID tracking
+        (containerRef.current as HTMLDivElement & { _leaflet_id?: number })._leaflet_id = undefined;
       }
+      boundsSetRef.current = false;
     };
   }, [gpxData?.length, segments?.length]);
 

@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Wind } from 'lucide-react';
 import { useAnalysisStore } from '@/stores/analysisStore';
 import { useConfig } from '@/hooks/useApi';
+import { DEFAULT_PARAMETERS } from '@/lib/defaults';
 
 interface WindDirectionInputProps {
   className?: string;
@@ -29,7 +30,7 @@ export function WindDirectionInput({ className = '' }: WindDirectionInputProps) 
   useEffect(() => {
     if (config) {
       reset({
-        windDirection: config.defaults.wind_direction || 90,
+        windDirection: config.defaults.wind_direction || DEFAULT_PARAMETERS.windDirection,
       });
     }
   }, [config, reset]);
