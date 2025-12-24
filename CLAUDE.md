@@ -1,10 +1,10 @@
 # CLAUDE.md - Foil Lab Web (Next.js Frontend)
 
-This file provides guidance to Claude Code (claude.ai/code) when working with the Next.js frontend for Foil Lab.
+This file provides guidance to Claude Code when working with the Next.js frontend for Foil Lab.
 
 ## Project Overview
 
-**Foil Lab Web** is a modern React-based frontend for the Foil Lab track analysis platform. It provides a clean, responsive UI for analyzing wingfoil/sailing GPS tracks with real-time parameter adjustment and beautiful visualizations.
+**Foil Lab Web** is a React-based frontend for analyzing wingfoil/sailing GPS tracks. It provides wind direction input with historical lookup, interactive analysis parameters, and polar performance visualizations.
 
 ## Repository Structure
 
@@ -13,292 +13,191 @@ This file provides guidance to Claude Code (claude.ai/code) when working with th
 ├── app/                        # Next.js App Router pages
 │   ├── layout.tsx             # Root layout with navigation
 │   ├── page.tsx               # Home page
-│   ├── analyze/               # Analysis page
-│   │   └── page.tsx          # Track analysis interface
-│   └── globals.css           # Global styles
-├── components/                # Reusable React components
-│   ├── FileUpload.tsx        # GPX file upload with drag & drop
-│   └── AnalysisResults.tsx   # Results display component
-├── lib/                       # Utilities and API client
-│   └── api.ts                # API client with types
-├── public/                    # Static assets
-├── .env.local                # Environment variables
-├── package.json              # Dependencies and scripts
-├── tsconfig.json             # TypeScript configuration
-├── tailwind.config.ts        # Tailwind CSS configuration
-└── next.config.mjs           # Next.js configuration
+│   ├── analyze/page.tsx       # Main analysis interface
+│   └── globals.css            # Global styles
+├── components/                 # React components
+│   ├── WindCompass.tsx        # Interactive click/drag compass
+│   ├── TrackFileCard.tsx      # File card with wind + metadata
+│   ├── TrackUploader.tsx      # Dropzone + file list
+│   ├── TrackNavigator.tsx     # Multi-track navigation
+│   ├── ComparisonView.tsx     # Track comparison UI
+│   ├── SimpleAnalysisResults.tsx  # Results display
+│   ├── PolarPlot.tsx          # Polar performance chart
+│   └── ui/                    # shadcn/ui components
+├── features/                   # Feature-specific code
+│   └── track-analysis/
+│       └── components/
+│           └── ParameterControls.tsx
+├── stores/                     # Zustand state stores
+│   ├── uploadStore.ts         # File upload state
+│   └── analysisStore.ts       # Analysis parameters + results
+├── hooks/                      # Custom React hooks
+│   └── useApi.ts              # React Query hooks for API
+├── lib/                        # Utilities
+│   ├── api-client.ts          # Axios client + types
+│   ├── gpx-parser.ts          # Client-side GPX parsing
+│   └── defaults.ts            # Default parameter values
+└── public/                     # Static assets
 ```
 
 ## Technology Stack
 
-- **Framework**: Next.js 14.2 with App Router
-- **Language**: TypeScript
-- **Styling**: Tailwind CSS
-- **State Management**: React hooks (useState, useEffect)
+- **Framework**: Next.js 15 with App Router
+- **Language**: TypeScript (strict)
+- **Styling**: Tailwind CSS + shadcn/ui
+- **State**: Zustand (stores) + React Query (API)
 - **API Client**: Axios
 - **File Upload**: react-dropzone
+- **Forms**: react-hook-form
 - **Icons**: lucide-react
-- **Deployment**: Vercel (planned)
 
 ## Key Commands
 
 ```bash
-# Install dependencies
-npm install
-
-# Development server
-npm run dev         # http://localhost:3000
-
-# Production build
-npm run build
-npm run start
-
-# Type checking
-npm run type-check  # (add to package.json if needed)
-
-# Linting
-npm run lint
+npm install          # Install dependencies
+npm run dev          # Dev server at http://localhost:3000
+npm run build        # Production build
+npm run lint         # ESLint
 ```
 
 ## API Integration
 
-### Configuration
-The app fetches default parameters and ranges from the backend on load:
-
-```typescript
-// lib/api.ts
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-
-// Fetches from GET /api/config
-const config = await getConfig();
-```
-
-### Environment Setup
+### Environment
 ```bash
 # .env.local
-NEXT_PUBLIC_API_URL=https://strava-tracks-analyzer-production.up.railway.app
+NEXT_PUBLIC_API_URL=http://localhost:8000  # Local backend
+# or
+NEXT_PUBLIC_API_URL=https://your-backend.railway.app  # Production
 ```
 
 ### API Endpoints Used
 - `GET /api/config` - Default parameters and ranges
-- `POST /api/analyze-track` - GPX file analysis
 - `GET /api/health` - Backend health check
+- `GET /api/lookup-wind` - Historical wind from Open-Meteo
+- `POST /api/analyze-track` - GPX file analysis
 
-## Component Architecture
-
-### Pages
-- **Home** (`app/page.tsx`): Landing page with features overview
-- **Analyze** (`app/analyze/page.tsx`): Main analysis interface
-
-### Components
-- **FileUpload**: Drag & drop GPX file upload
-  - Uses react-dropzone
-  - Shows upload state and selected file
-  - Validates file type (.gpx only)
-
-- **AnalysisResults**: Displays analysis results
-  - Performance metrics cards
-  - Wind estimation details
-  - Session summary
-  - Responsive grid layout
-
-### State Management
+### API Client (`lib/api-client.ts`)
 ```typescript
-// app/analyze/page.tsx
-const [file, setFile] = useState<File | null>(null);
-const [loading, setLoading] = useState(false);
-const [result, setResult] = useState<AnalysisResult | null>(null);
-const [config, setConfig] = useState<ConfigResponse | null>(null);
-
-// Dynamic parameter states
-const [windDirection, setWindDirection] = useState(90);
-const [angleTolerance, setAngleTolerance] = useState(25);
+// Key functions
+getConfig(): Promise<ConfigResponse>
+healthCheck(): Promise<{ status: string }>
+lookupWind(lat, lon, date, hour): Promise<HistoricalWindResponse>
+analyzeTrack(file, params): Promise<AnalysisResult>
 ```
 
-## Styling Guidelines
-
-### Tailwind Classes
-- Use semantic color names: `text-gray-700`, `bg-blue-50`
-- Responsive utilities: `lg:col-span-2`, `md:grid-cols-2`
-- Interactive states: `hover:bg-blue-700`, `disabled:opacity-50`
-
-### Custom Components
-- Wind direction has enhanced UI with blue theme
-- Metric cards use color coding (blue, green, purple, orange)
-- Loading states with animated spinners
-
-### CSS Variables
-```css
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-```
-
-## Development Workflow
-
-### Adding New Features
-1. Create component in `components/`
-2. Add TypeScript interfaces in component or `lib/api.ts`
-3. Use consistent styling patterns
-4. Handle loading and error states
-5. Test with backend API
-
-### Parameter Management
-- Parameters fetched from backend on load
-- Fallback to hardcoded defaults if API fails
-- All sliders use dynamic min/max/step from config
-
-### File Structure Conventions
-```
-components/
-├── FeatureName.tsx        # Component implementation
-├── FeatureName.test.tsx   # Component tests (if added)
-└── index.ts              # Barrel export (if multiple components)
-```
-
-## Type Definitions
-
-### Core Types
+### React Query Hooks (`hooks/useApi.ts`)
 ```typescript
-// Wind estimation result
-interface WindEstimate {
-  direction: number;
-  confidence: string;
-  port_average_angle: number;
-  starboard_average_angle: number;
-  total_segments: number;
-  port_segments: number;
-  starboard_segments: number;
-}
-
-// Performance metrics
-interface PerformanceMetrics {
-  avg_speed: number | null;
-  avg_upwind_angle: number | null;
-  best_upwind_angle: number | null;
-  vmg_upwind: number | null;
-  vmg_downwind: number | null;
-  port_tack_count: number;
-  starboard_tack_count: number;
-}
-
-// Configuration response
-interface ConfigResponse {
-  defaults: { [key: string]: number };
-  ranges: { [key: string]: ParameterRange };
-}
+useConfig()           // Fetch app config
+useHealthCheck()      // Backend health
+useLookupWind()       // Wind lookup mutation
+useTrackAnalysis()    // Track analysis mutation
+useConnectionStatus() // Derived connection state
 ```
 
-## Error Handling
+## State Management
 
-### API Errors
+### Upload Store (`stores/uploadStore.ts`)
+Manages uploaded files, their status, and GPS data:
 ```typescript
-try {
-  const result = await analyzeTrack(file, params);
-} catch (err: any) {
-  setError(
-    err.response?.data?.detail || 
-    'Analysis failed. Please check your file and try again.'
-  );
+interface FileWithMetadata {
+  file: File;
+  id: string;
+  status: 'pending' | 'uploading' | 'processing' | 'completed' | 'error';
+  result?: AnalysisResult;
+  gpsData?: GPSPoint[];
+  metadata?: GPXMetadata;
 }
 ```
 
-### Loading States
-- File upload shows loading spinner
-- Analysis button disabled during processing
-- Configuration loads on mount with loading indicator
-
-## Performance Considerations
-
-- Large GPX files uploaded as FormData
-- Results rendering optimized with React
-- Minimal re-renders with proper state management
-- Static assets optimized by Next.js
-
-## Deployment
-
-### Vercel Deployment
-1. Push to GitHub repository
-2. Connect to Vercel
-3. Set environment variables:
-   - `NEXT_PUBLIC_API_URL`
-4. Deploy from branch
-
-### Build Configuration
-```json
-{
-  "buildCommand": "npm run build",
-  "outputDirectory": ".next",
-  "installCommand": "npm install"
+### Analysis Store (`stores/analysisStore.ts`)
+Manages analysis parameters and current results:
+```typescript
+interface AnalysisParameters {
+  windDirection: number;
+  angleTolerance: number;
+  minSpeed: number;
+  minDistance: number;
+  minDuration: number;
 }
 ```
 
-## Future Enhancements
+## Key Components
 
-### Planned Features
-- Polar plots for wind angles
-- Interactive track map visualization
-- Session comparison tool
-- Export functionality (CSV, PNG)
-- User preferences persistence
+### WindCompass
+Interactive SVG compass for setting wind direction:
+- Click anywhere to set direction
+- Drag to fine-tune
+- Shows cardinal directions (N/E/S/W)
+- Displays degrees and cardinal label (e.g., "285° (WNW)")
 
-### Technical Improvements
-- Add React Query for API state management
-- Implement proper error boundaries
-- Add comprehensive test suite
-- Progressive Web App capabilities
-- Offline support with service workers
+### TrackFileCard
+Shows uploaded track with integrated wind:
+- File name and status
+- Track date and location from GPX
+- Auto-lookups wind from Open-Meteo
+- Embedded WindCompass
+- Analyze button
 
-## Common Issues
+### TrackUploader
+Combines dropzone with file list:
+- Drag & drop GPX files
+- Shows TrackFileCard for each file
+- Parses GPX metadata on upload
 
-### CORS Errors
-- Ensure backend has proper CORS configuration
-- Check API URL in environment variables
+## Analysis Flow
 
-### Build Errors
-- Clear `.next` directory and rebuild
-- Check for TypeScript errors with `tsc --noEmit`
-- Ensure all dependencies are installed
+1. User drops GPX file(s) in TrackUploader
+2. GPX parsed client-side for metadata (date, location, points)
+3. Wind auto-looked up from Open-Meteo API
+4. User can adjust wind direction via compass
+5. User clicks "Analyze Track"
+6. Backend processes with wind + parameters
+7. Results displayed (segments, polar plot, VMG, etc.)
 
-### State Management
-- Use proper dependency arrays in useEffect
-- Handle cleanup for async operations
-- Manage loading states consistently
+## Styling
 
-## Integration with Backend
-
-### Data Flow
-1. User uploads GPX file
-2. Frontend sends to `/api/analyze-track`
-3. Backend processes with core algorithms
-4. Results returned and displayed
-5. User can adjust parameters and re-analyze
-
-### Configuration Sync
-- Backend is single source of truth
-- Frontend fetches on load
-- Parameters automatically stay in sync
-- No hardcoded values in frontend
+- Uses Tailwind CSS utility classes
+- shadcn/ui for consistent components (Button, Card, Input, etc.)
+- Blue theme for wind-related UI
+- Green for success states, red for errors
 
 ## Development Tips
 
-### Best Practices
-- Keep components focused and reusable
-- Use TypeScript strictly for type safety
-- Handle all loading and error states
-- Make UI responsive and accessible
-- Follow React hooks rules
+### Adding New API Endpoints
+1. Add function in `lib/api-client.ts`
+2. Add React Query hook in `hooks/useApi.ts`
+3. Use hook in component
 
-### Testing Approach
-- Test with various GPX file sizes
-- Verify parameter ranges work correctly
-- Check error handling for network issues
-- Test on mobile devices
-- Validate accessibility
+### Adding New Components
+1. Create in `components/`
+2. Use TypeScript interfaces
+3. Handle loading/error states
+4. Use Tailwind for styling
 
-## Related Documentation
+### Common Patterns
+```typescript
+// Using a mutation hook
+const windLookup = useLookupWind();
+windLookup.mutate({ latitude, longitude, date, hour }, {
+  onSuccess: (result) => { /* handle success */ },
+  onError: (error) => { /* handle error */ }
+});
 
-- Main backend CLAUDE.md: `../strava-tracks-analyzer/CLAUDE.md`
-- API documentation: `../strava-tracks-analyzer/api/main.py`
-- Deployment guide: See backend CLAUDE.md
+// Using the upload store
+const uploadStore = useUploadStore();
+uploadStore.addFile(file);
+uploadStore.setFileGPSData(fileId, gpsPoints, metadata);
+```
+
+## Future Features (see ALGORITHM_IMPROVEMENTS.md)
+
+- **Polar data output**: Speed vs angle tables
+- **Track comparison**: Side-by-side stats and polars
+- **Subset selection**: Analyze portion of large tracks
+- **Export**: CSV/PNG of results
+
+## Related Files
+
+- Backend: `/Users/wrench/Software/foil-lab/`
+- Algorithm plan: `/Users/wrench/Software/foil-lab/docs/ALGORITHM_IMPROVEMENTS.md`
+- Backend API: `/Users/wrench/Software/foil-lab/backend/api/main.py`
