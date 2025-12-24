@@ -22,8 +22,10 @@ That's it. Everything else was deleted to prevent confusion.
 ## Why This Exists
 
 This repo was the original standalone frontend before we migrated to a monorepo. It's kept only because:
-- Vercel may still be configured to deploy from this repo
+- Vercel deploys from this repo to https://foil-lab-web.vercel.app/
 - The vercel.json redirects all traffic to the Railway production URL
+
+**Live URL**: https://foil-lab-web.vercel.app/ → redirects to Railway
 
 ## The Real Code Location
 
