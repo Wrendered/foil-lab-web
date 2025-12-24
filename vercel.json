@@ -1,0 +1,9 @@
+{
+  "redirects": [
+    {
+      "source": "/(.*)",
+      "destination": "https://gracious-love-production-ec22.up.railway.app/$1",
+      "permanent": false
+    }
+  ]
+}
